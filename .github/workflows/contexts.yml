@@ -1,0 +1,33 @@
+name: Terraform production deploy
+
+on:
+    push:
+        branches: 
+            - main
+            - develop
+jobs:
+    apply:
+        # 👇 Using github.ref to restrict execution to main branch
+        # github.ref returns: refs/heads/main
+        # This prevents production deployment from develop or feature branches
+        if: github.ref == 'refs/heads/main'
+
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@4
+
+            - name: Show branch info
+              run: |
+                  echo "Full ref: ${{ github.ref }}"       # shows refs/heads/main
+                  echo "Short name: ${{github.ref_name}}" #shows main
+
+            - name: Terraform init
+              run: terraform init
+
+            - name: Terraform apply
+              run: terraform apply -auto-approve
+
+
+
+
+        
