@@ -1,0 +1,45 @@
+name: Terraform branch workspace deploy
+# Automatic Workspace Selection Based on Branch - Goal is to deploy:
+# dev workspace from develop
+# prod workspace from main
+
+on: 
+    push:
+        branches:
+          - main
+          - develop 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Determine workspace
+        run: |
+          # 👇 Using github.ref_name to dynamically detect branch
+          #  github.ref_name returns short branch name (main, develop)
+          if [[ "${{github.ref_name}}" == "main" ]]; then 
+              echo "TF_WORKSPACE=prod" >> $GITHUB_ENV
+          else
+            echo "TF_WORKSPACE=dev" >> $GITHUB_ENV
+          fi
+      
+      - name: Terraform init
+        run: terraform init
+
+      - name: Select workspace
+        run: |
+            terraform workspace select $TF_WORKSPACE || \
+            terraform workspace new $TF_WORKSPACE
+
+      #- name: Terraform apply
+      #  run: terraform apply-auto-approve
+
